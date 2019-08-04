@@ -23,33 +23,27 @@
  
 using namespace std;
  
-namespace hash_use
-{
-    ll H_MAX = 200005;
-    const ll p = 239017;
-    const ll mod = 1e9 + 7;
-    vector<ll> pw(H_MAX);
- 
-    void init()
-    {
+namespace hash_use {
+    int p = 239017;
+    int mod = 1e9 + 13;
+    const int HMAX = 1e5 + 5;
+    vector<int> pw(HMAX);
+    void init() {
         pw[0] = 1;
-        for (ll i = 1; i < pw.size(); i++)
-            pw[i] = (pw[i - 1] % mod * p % mod) % mod;
+        for (int i = 1; i < HMAX; i++)
+            pw[i] = (pw[i - 1] * p) % mod;
     }
  
-    vector<ll> getHash(string s)
-    {
-        vector<ll> hash(s.size());
+    void getHash(string &s, vector<int> &hash) {
+        hash.resize(s.size());
         hash[0] = s[0];
-        for (ll i = 1; i < s.size(); i++)
-            hash[i] = ((hash[i - 1] * p) % mod + s[i]) % mod;
  
-        return hash;
+        for (int i = 1; i < s.size(); i++)
+            hash[i] = ((hash[i - 1] * p) % mod + s[i]) % mod;
     }
  
-    ll getHashSeg(ll l, ll r, vector<ll> &hash)
-    {
-        ll hashSeg;
+    int getHashSeg(vector<int> &hash, int l, int r) {
+        int hashSeg;
         if (l > 0)
             hashSeg = (hash[r] - (hash[l - 1] * pw[r - l + 1]) % mod + mod) % mod;
         else
@@ -57,7 +51,6 @@ namespace hash_use
         return hashSeg;
     }
 }
- 
 using namespace hash_use;
  
 signed main()
