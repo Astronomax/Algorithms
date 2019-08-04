@@ -34,7 +34,7 @@ namespace hash_use
     {
         pw[0] = 1;
         for (ll i = 1; i < pw.size(); i++)
-            pw[i] = pw[i - 1] * p;
+            pw[i] = (pw[i - 1] % mod * p % mod) % mod;
     }
  
     vector<ll> getHash(string s)
