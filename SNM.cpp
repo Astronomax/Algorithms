@@ -48,7 +48,7 @@ void unite(int a, int b) {
         if (size[a] < size[b])
             swap(a, b);
         link[b] = a;
-        siz[a] += siz[b];
+        size[a] += size[b];
     }
 }
 signed main()
