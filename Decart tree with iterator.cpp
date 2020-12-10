@@ -161,12 +161,75 @@ struct decart {
 		return lower_count(root, key);
 	}
 
-	node* get_by_index(int index) {
+	class iterator : public std::iterator<std::input_iterator_tag, T, long, const T*, T>
+	{
+	private:
+		node* num;
+		int index;
+	public:
+		explicit iterator(node* _num, long _index) : num(_num), index(_index) {}
+		iterator& operator++() {
+			node* last = num;
+			if (num->r != nullptr) {
+				num = num->r;
+				while (num->l != nullptr)
+					num = num->l;
+				index++;
+				return *this;
+			}
+			else {
+				auto last = num;
+				num = num->pred;
+				while (num != nullptr && num->l != last) {
+					last = num;
+					num = num->pred;
+				}
+				if (num == nullptr)
+					index = -1;
+				else index++;
+				return *this;
+			}
+			num = num->r;
+			while (num->l != nullptr)
+				num = num->l;
+			if (num == nullptr)
+				index = -1;
+			else index++;
+			return *this;
+		}
+		iterator operator++(int) {
+			iterator retval = *this;
+			++(*this);
+			return retval;
+		}
+		bool operator==(iterator other) const {
+			return index == other.index;
+		}
+		bool operator!=(iterator other) const {
+			return !(*this == other);
+		}
+		T operator*() const {
+			return num->key;
+		}
+	};
+	iterator begin() {
+		node *cur = root;
+		while (cur->l != nullptr)
+			cur = cur->l;
+		return iterator(cur, 0);
+	}
+	iterator end() {
+		return iterator(nullptr, -1);
+	}
+
+	iterator get_by_index(int index) {
 		auto spl1 = split_k(root, index);
 		auto spl2 = split_k(spl1.second, 1);
 		node* result = spl2.first;
 		root = merge(spl1.first, merge(spl2.first, spl2.second));
-		return result;
+		if (result == nullptr)
+			return end();
+		else return iterator(result, index);
 	}
 
 	int upper_count(node *v, T key) {
@@ -188,67 +251,6 @@ struct decart {
 		auto res = split(root, key);
 		root = merge(merge(res.first, add), res.second);
 	}
-
-	class iterator : public std::iterator<std::input_iterator_tag, T, long, const T*, T>                     
-	{
-	private:
-		node* num;
-		int index;
-	public:
-		explicit iterator(node* _num, long _index) : num(_num), index(_index) {}
-		iterator& operator++() { 
-			node* last = num;
-			if (num->r != nullptr) {
-				num = num->r;
-				while (num->l != nullptr)
-					num = num->l;
-				index++;
-				return *this;
-			}
-			else {
-				auto last = num;
-				num = num->pred;
-				while (num != nullptr && num->l != last) {
-					last = num;
-					num = num->pred;
-				}
-				if (num == nullptr) 
-					index = -1;
-				else index++;
-				return *this;
-			}
-			num = num->r;
-			while (num->l != nullptr)
-				num = num->l;
-			if (num == nullptr)
-				index = -1;
-			else index++;
-			return *this; 
-		}
-		iterator operator++(int) { 
-			iterator retval = *this; 
-			++(*this); 
-			return retval; 
-		}
-		bool operator==(iterator other) const { 
-			return index == other.index; 
-		}
-		bool operator!=(iterator other) const { 
-			return !(*this == other); 
-		}
-		T operator*() const { 
-			return num->key; 
-		}
-	};
-	iterator begin() { 
-		node *cur = root;
-		while (cur->l != nullptr)
-			cur = cur->l;
-		return iterator(cur, 0); 
-	}
-	iterator end() { 
-		return iterator(nullptr, -1); 
-	}
 };
 
 signed main() {
@@ -259,18 +261,27 @@ signed main() {
 	//freopen("output.txt", "w", stdout);
 
 	decart<int> d;
-	int n, m; cin >> n >> m;
+	int n; cin >> n;
+	int last = 0;
 	for (int i = 0; i < n; i++) {
-		d.insert(i + 1);
-	for (int i = 0; i < m; i++) {
-		int l, r; cin >> l >> r;
-		l--; r--;
-		int len = r - l + 1;
-		auto spl1 = d.split_k(d.root, l);
-		auto spl2 = d.split_k(spl1.second, len);
-		d.root = d.merge(d.merge(spl2.first, spl1.first), spl2.second);
+		char t; cin >> t;
+		int x; cin >> x;
+		if (t == '+') {
+			x = ((last + x) % mod + mod) % mod;
+			if (!d.find(d.root, x))
+				d.insert(x);
+			last = 0;
+		}
+		else {
+			int index = d.get_size(d.root) - d.lower_count(d.root, x);
+
+			auto v = d.get_by_index(index);
+			int ans = -1;
+			if (v != d.end())
+				ans = *v;
+			cout << ans << endl;
+			last = ans;
+		}
 	}
-	for (auto it : d)
-		cout << it << " ";
 	return 0;
 }
