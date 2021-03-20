@@ -1,3 +1,8 @@
+#pragma GCC optimize("Ofast,no-stack-protector")
+#pragma GCC optimize("unroll-loops")
+#pragma GCC optimize("profile-values,profile-reorder-functions,tracer")
+#pragma GCC optimize("branch-target-load-optimize")
+
 #include <iostream>
 #include <cstdio>
 #include <vector>
@@ -17,6 +22,9 @@
 #include <iomanip>
 #include <time.h>
 #include <complex>
+#include <chrono>
+#include <random>
+
 //#pragma comment(linker, "/STACK:16777216")
 
 using namespace std;
@@ -27,20 +35,20 @@ typedef complex<C> P;
 #define X real()
 #define Y imag()
 #define Size(X) (int)X.size()
-#define int long long
 #define ui unsigned int
 #define mp make_pair
 #define timer fghge
 #define y1 yjyjyju
 #define all(X) (X).begin(), (X).end()
 #define endl '\n'
+mt19937_64 rnd(std::chrono::system_clock::now().time_since_epoch().count());
 
 struct decart {
 	struct tree {
 		int x, y, s;
 		tree *l, *r;
 		tree(int key) {
-			x = key; y = rand();
+			x = key; y = rnd();
 			l = nullptr, r = nullptr;
 			s = 1;
 		}
@@ -68,7 +76,7 @@ struct decart {
 			return a;
 		}
 		else {
-			b->l = merge(b->l, a);
+			b->l = merge(a, b->l);
 			update(b);
 			return b;
 		}
@@ -91,109 +99,58 @@ struct decart {
 		}
 	}
 
-	pair<tree *, tree *> split_k(tree *v, int k) {
+	int ans(tree *v, int x) {
 		if (v == nullptr)
-			return{ nullptr, nullptr };
-
-		if (get_size(v->l) >= k) {
-			auto res = split_k(v->l, k);
-			v->l = res.second;
-			update(v);
-			return{ res.first, v };
-		}
-		else {
-			auto res = split_k(v->r, k - (get_size(v->l) + 1));
-			v->r = res.first;
-			update(v);
-			return{ v, res.second };
-		}
+			return 0;
+		if (v->x > x)
+			return ans(v->l, x) + get_size(v->r) + 1;
+		else return ans(v->r, x);
 	}
 
-	void insert(int x) {
-		tree *add = new tree(x);
-		auto res = split(root, x);
-		root = merge(merge(res.first, add), res.second);
+	tree* insert(tree* v, tree* x) {
+		if (v == nullptr)
+			return x;
+
+		if (v->y < x->y) {
+			auto res = split(v, x->x);
+			x->l = res.first;
+			x->r = res.second;
+			update(x);
+			return x;
+		}
+		else {
+			if (v->x < x->x)
+				v->r = insert(v->r, x);
+			else v->l = insert(v->l, x);
+			++v->s;
+			return v;
+		}
 	}
 };
 
-struct node {
-	int lb, rb, lazy = -1;
-	node *l, *r;
-	decart *order;
+struct fenv {
+	vector<decart> t;
+	int n;
+	fenv(int _n) {
+		n = _n;
+		t.assign(n + 1, decart());
+	}
 
-	node(int lq, int rq) {
-		lb = lq; rb = rq;
-		order = new decart();
-
-		if (lb + 1 < rb) {
-			int t = (lb + rb) / 2;
-			l = new node(lb, t);
-			r = new node(t, rb);
+	void add(int k, int x) {
+		k++;
+		while (k <= n) {
+			t[k].root = t[k].insert(t[k].root, new decart::tree(x));
+			k += k & -k;
 		}
 	}
 
-	void push() {
-		if (lazy == -1)
-			return;
-		order->insert(lazy);
-
-		if (lb + 1 < rb) {
-			if (l->lazy != -1) {
-				l->order->insert(l->lazy);
-				if (l->lb + 1 < l->rb) {
-					l->l->lazy = l->lazy;
-					l->r->lazy = l->lazy;
-				}
-			}
-			l->lazy = lazy;
-
-			if (r->lazy != -1) {
-				r->order->insert(r->lazy);
-				if (r->lb + 1 < r->rb) {
-					r->l->lazy = r->lazy;
-					r->r->lazy = r->lazy;
-				}
-			}
-			r->lazy = lazy;
+	int ans(int k, int x) {
+		int s = 0; k++;
+		while (k >= 1) {
+			s += t[k].ans(t[k].root, x);
+			k -= k & -k;
 		}
-		lazy = -1;
-	}
-
-	void add(int lq, int rq, int x) {
-		push();
-		if (lq >= rb || rq < lb)
-			return;
-
-		if (lq <= lb && rb - 1 <= rq) {
-			push();
-			lazy = x;
-			push();
-		}
-		else {
-			l->add(lq, rq, x);
-			r->add(lq, rq, x);
-
-			order->insert(x);
-		}
-	}
-
-	int ans(int lq, int rq, int x) {
-		int res = 0;
-		push();
-
-		if (lq >= rb || rq < lb)
-			return 0;
-
-		if (lq <= lb && rb - 1 <= rq) {
-			auto temp = order->split(order->root, x);
-			res = order->get_size(temp.second);
-			order->merge(temp.first, temp.second);
-		}
-		else {
-			res += l->ans(lq, rq, x);
-			res += r->ans(lq, rq, x);
-		}
-		return res;
+		return s;
 	}
 };
 
@@ -205,13 +162,12 @@ signed main() {
 	//freopen("output.txt", "w", stdout);
 
 	int n; cin >> n;
-	node *d = new node(0, n);
-
-
+	fenv *d = new fenv(n);
 	for (int i = 0; i < n; i++) {
 		int a, b; cin >> a >> b; a--;
-		cout << d->ans(0, a, b) << " ";
-		d->add(a, n - 1, b);
+		cout << d->ans(a, b) << " ";
+		d->add(a, b);
 	}
+	//cout << endl << (double)clock() / CLOCKS_PER_SEC;
 	return 0;
 }
