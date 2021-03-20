@@ -60,7 +60,7 @@ struct decart {
 		return ((v == nullptr) ? 0 : v->s);
 	}
 
-	void update(tree *v) {
+	inline void update(tree *v) {
 		if (v == nullptr)
 			return;
 		v->s = get_size(v->l) + get_size(v->r) + 1;
@@ -128,29 +128,38 @@ struct decart {
 	}
 };
 
-struct fenv {
-	vector<decart> t;
-	int n;
-	fenv(int _n) {
-		n = _n;
-		t.assign(n + 1, decart());
-	}
+struct node {
+	int lb, rb;
+	node *l, *r;
+	decart *order;
 
-	void add(int k, int x) {
-		k++;
-		while (k <= n) {
-			t[k].root = t[k].insert(t[k].root, new decart::tree(x));
-			k += k & -k;
+	node(int lq, int rq) {
+		lb = lq; rb = rq;
+		order = new decart();
+
+		if (lb + 1 < rb) {
+			int t = (lb + rb) / 2;
+			l = new node(lb, t);
+			r = new node(t, rb);
 		}
 	}
 
-	int ans(int k, int x) {
-		int s = 0; k++;
-		while (k >= 1) {
-			s += t[k].ans(t[k].root, x);
-			k -= k & -k;
+	void add(int t, int x) {
+		if (t < lb || t >= rb)
+			return;
+		order->root = order->insert(order->root, new decart::tree(x));
+		if (lb + 1 < rb) {
+			l->add(t, x);
+			r->add(t, x);
 		}
-		return s;
+	}
+
+	int ans(int lq, int rq, int x) {
+		if (lq >= rb || rq < lb)
+			return 0;
+		if (lq <= lb && rb - 1 <= rq)
+			return order->ans(order->root, x);
+		else return l->ans(lq, rq, x) + r->ans(lq, rq, x);
 	}
 };
 
@@ -162,10 +171,10 @@ signed main() {
 	//freopen("output.txt", "w", stdout);
 
 	int n; cin >> n;
-	fenv *d = new fenv(n);
+	node *d = new node(0, n);
 	for (int i = 0; i < n; i++) {
 		int a, b; cin >> a >> b; a--;
-		cout << d->ans(a, b) << " ";
+		cout << d->ans(0, a, b) << " ";
 		d->add(a, b);
 	}
 	//cout << endl << (double)clock() / CLOCKS_PER_SEC;
