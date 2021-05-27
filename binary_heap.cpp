@@ -1,44 +1,27 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include <iostream>
-#include <cstdio>
 #include <vector>
-#include <set>
-#include <queue>
-#include <map>
 #include <string>
+#include <map>
+#include <queue>
+#include <unordered_map>
+#include <unordered_set>
+#include <cassert>
+#include <complex>
+#include <cstdio>
+#include <iostream>
+#include <iomanip>
 #include <cmath>
 #include <functional>
 #include <algorithm>
-#include <utility>
 #include <stack>
-#include <unordered_map>
-#include <unordered_set>
-#include <iterator>
-#include <fstream>
-#include <iomanip>
-#include <time.h>
-#include <complex>
-#include <chrono>
-#include <random>
 #include <numeric>
-//#pragma comment(linker, "/STACK:16777216")
+#include <set>
 
-using namespace std;
-
-typedef long double C;
-typedef complex<C> P;
-
-#define X real()
-#define Y imag()
-#define Size(X) (int)X.size()
-//#define int long long
-#define ui unsigned int
-#define mp make_pair
-#define timer fghge
-#define y1 yjyjyju
 #define all(X) (X).begin(), (X).end()
+//#define int long long
+#define m_p make_pair
 #define endl '\n'
-mt19937_64 rnd(std::chrono::system_clock::now().time_since_epoch().count());
+using namespace std;
 
 template<typename T>
 class binary_heap {
@@ -88,21 +71,12 @@ private:
 	vector<int> data_;
 };
 
-signed main()
-{
-	ios_base::sync_with_stdio(0);
-	cin.tie(0), cout.tie(0);
-	//freopen("input.txt", "r", stdin);
+signed main() {
+	ios::sync_with_stdio(0);
+	cin.tie(0);
+#ifndef ONLINE_JUDGE
+	freopen("input.txt", "r", stdin);
+#endif
 
-	int n; cin >> n;
-	binary_heap a(n);
-	for (int i = 0; i < n; i++) {
-		int x; cin >> x;
-		a.insert(x);
-	}
-	while (!a.empty()) {
-		cout << a.min_elem() << endl;
-		a.erase_min();
-	}
 	return 0;
 }
