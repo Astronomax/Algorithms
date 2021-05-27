@@ -40,36 +40,28 @@ typedef complex<C> P;
 #define endl '\n'
 mt19937_64 rnd(std::chrono::system_clock::now().time_since_epoch().count());
 
+template<typename T>
 class binary_heap {
 public:
-	binary_heap(int n) {
-		data_ = new int[n];
-		capacity_ = n;
+	bool empty() const {
+		return !data_.size();
 	}
 
-	~binary_heap() {
-		if (data_ != nullptr)
-			delete[] data_;
-	}
-
-	bool empty() {
-		return !size_;
-	}
-
-	int min_elem() {
+	T min_element() const {
 		return data_[0];
 	}
 
-	void insert(int value) {
-		++size_;
-		data_[size_ - 1] = value;
-		sift_up(size_ - 1);
+	void insert(T value) {
+		data_.push_back(value);
+		sift_up(data_.size() - 1);
 	}
 
-	void erase_min() {
-		--size_;
-		data_[0] = data_[size_];
+	T erase_min() {
+		T res = data_[0];
+		data_[0] = data_.back();
+		data_.pop_back();
 		sift_down(0);
+		return res;
 	}
 
 private:
@@ -82,19 +74,18 @@ private:
 	}
 	void sift_down(int v) {
 		int l = 2 * v, r = 2 * v + 1;
-		if (l >= size_)
+		if (l >= data_.size())
 			return;
 		int ind = l;
-		if (r < size_ && data_[r] < data_[ind])
+		if (r < data_.size() && data_[r] < data_[ind])
 			ind = r;
-		if (data_[v] > data_[ind]) {
+		if (data_[ind] < data_[v]) {
 			swap(data_[v], data_[ind]);
 			sift_down(ind);
 		}
 	}
 private:
-	int *data_ = nullptr;
-	int size_ = 0, capacity_ = 0;
+	vector<int> data_;
 };
 
 signed main()
