@@ -70,7 +70,17 @@ const int MAXN = 500005;
 int f[MAXN];
 
 int c(int n, int k) {
+	if (n < 0 || n < 0 || n - k < 0)
+		return 0;
 	return (f[n] * inv(f[n - k] * f[k], mod)) % mod;
+}
+
+int klimenko(int n, int k) {
+	return c(n + k - 1, k - 1);
+}
+
+int kuznets(int n, int k, int d) {
+	return klimenko(n - k * (d - 1) - d, d + 1);
 }
 
 signed main() {
