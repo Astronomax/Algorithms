@@ -26,7 +26,7 @@ using namespace std;
 namespace hash_use {
 	int p = 239017;
 	int mod = 1e9 + 13;
-	const int HMAX = 1e5 + 5;
+	const int HMAX = 1e6 + 1000;
 	vector<int> pw(HMAX);
 	void init() {
 		pw[0] = 1;
