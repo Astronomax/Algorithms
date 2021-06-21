@@ -38,7 +38,7 @@ typedef complex<C> P;
 namespace hash_use {
     int p = 239017;
     pair<int, int> mod = { 1e9 + 7, 1e9 + 13 };
-    const int HMAX = 1e5 + 5;
+    const int HMAX = 1e6 + 1000;
     vector<pair<int, int>> pw(HMAX);
     void init() {
         pw[0] = { 1, 1 };
