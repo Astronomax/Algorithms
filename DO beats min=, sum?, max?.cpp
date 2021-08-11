@@ -37,15 +37,14 @@ void push(int k, int l, int r) {
 void update(int k, int l, int r) {
 	if (l < r) {
 		sumt[k] = sumt[k * 2] + sumt[k * 2 + 1];
-		set<int> order;
-		order.insert(smaxt[2 * k]);
-		order.insert(maxt[2 * k]);
-		order.insert(smaxt[2 * k + 1]);
-		order.insert(maxt[2 * k + 1]);
-		
-		auto it = order.rbegin();
-		maxt[k] = *(it++);
-		smaxt[k] = *it;
+		maxt[k] = max(maxt[k * 2], maxt[k * 2 + 1]);
+		if (smaxt[k * 2] >= maxt[k * 2 + 1])
+			smaxt[k] = smaxt[k * 2];
+		else if(smaxt[k * 2 + 1] >= maxt[k * 2])
+			smaxt[k] = smaxt[k * 2 + 1];
+		else if (maxt[k * 2] != maxt[k * 2 + 1])
+			smaxt[k] = min(maxt[k * 2], maxt[k * 2 + 1]);
+		else smaxt[k] = max(smaxt[k * 2], smaxt[k * 2 + 1]);
 
 		int a = k * 2, b = k * 2 + 1;
 		if (maxt[a] < maxt[b]) swap(a, b);
