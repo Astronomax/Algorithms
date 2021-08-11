@@ -83,8 +83,8 @@ int sum(int k, int l, int r, int lq, int rq) {
 
 int min(int k, int l, int r, int lq, int rq) {
 	push(k, l, r);
-	if (rq < l) return 0;
-	if (r < lq) return 0;
+	if (rq < l) return LLONG_MAX;
+	if (r < lq) return LLONG_MAX;
 	if (lq <= l && r <= rq)
 		return mint[k];
 	int mid = (l + r) / 2;
@@ -93,8 +93,8 @@ int min(int k, int l, int r, int lq, int rq) {
 
 int max(int k, int l, int r, int lq, int rq) {
 	push(k, l, r);
-	if (rq < l) return 0;
-	if (r < lq) return 0;
+	if (rq < l) return -LLONG_MAX;
+	if (r < lq) return -LLONG_MAX;
 	if (lq <= l && r <= rq)
 		return maxt[k];
 	int mid = (l + r) / 2;
