@@ -100,32 +100,6 @@ matrix<T> operator -(const matrix<T> &a, const matrix<T> &b) {
 }
 
 template<typename T>
-matrix<T> add_mod(const matrix<T> &a, const matrix<T> &b, int mod) {
-	int na = a.get_n(), ma = a.get_m();
-	int nb = b.get_n(), mb = b.get_m();
-	if (na != nb || ma != mb)
-		throw 1;
-	matrix<T> res(na, ma);
-	for (int i = 0; i < na; i++)
-		for (int j = 0; j < ma; j++)
-			res[i][j] = (a[i][j] % mod + b[i][j] % mod) % mod;
-	return res;
-}
-
-template<typename T>
-matrix<T> sub_mod(const matrix<T> &a, const matrix<T> &b, int mod) {
-	int na = a.get_n(), ma = a.get_m();
-	int nb = b.get_n(), mb = b.get_m();
-	if (na != nb || ma != mb)
-		throw 1;
-	matrix<T> res(na, ma);
-	for (int i = 0; i < na; i++)
-		for (int j = 0; j < ma; j++)
-			res[i][j] = (a[i][j] % mod - b[i][j] % mod + mod) % mod;
-	return res;
-}
-
-template<typename T>
 matrix<T> binpow(matrix<T> a, int p) {
 	int n = a.get_n(), m = a.get_m();
 	if (n != m)
@@ -160,6 +134,61 @@ std::istream& operator >>(std::istream& in, matrix<T> &mat) {
 		for (int j = 0; j < mat.get_m(); j++)
 			in >> mat[i][j];
 	return in;
+}
+
+template<typename T>
+matrix<T> merge(const matrix<T> &_11, const matrix<T> &_12, const matrix<T> &_21, const matrix<T> &_22) {
+	if (_11.get_n() != _12.get_n() || _21.get_n() != _22.get_n() || _11.get_m() != _21.get_m() || _12.get_m() != _22.get_m())
+		throw 1;
+	int nb = _11.get_n() + _21.get_n(), mb = _11.get_m() + _12.get_m();
+	matrix<T> res(nb, mb);
+	res.insert(0, _11.get_n() - 1, 0, _11.get_m() - 1, _11);
+	res.insert(0, _12.get_n() - 1, _11.get_m(), mb - 1, _12);
+	res.insert(_11.get_n(), nb - 1, 0, _21.get_m() - 1, _21);
+	res.insert(_12.get_n(), nb - 1, _21.get_m(), mb - 1, _22);
+	return res;
+}
+
+template<typename T>
+matrix<T> Strassen_(const matrix<T> &a, const matrix<T> &b) {
+	if (a.get_n() <= 57)
+		return a * b;
+
+	matrix<T> a11, a12, a21, a22;
+	a.split(a11, a12, a21, a22);
+
+	matrix<T> b11, b12, b21, b22;
+	b.split(b11, b12, b21, b22);
+
+	matrix<T> p1 = Strassen_(a11 + a22, b11 + b22);
+	matrix<T> p2 = Strassen_(a21 + a22, b11);
+	matrix<T> p3 = Strassen_(a11, b12 - b22);
+	matrix<T> p4 = Strassen_(a22, b21 - b11);
+	matrix<T> p5 = Strassen_(a11 + a12, b22);
+	matrix<T> p6 = Strassen_(a21 - a11, b11 + b12);
+	matrix<T> p7 = Strassen_(a12 - a22, b21 + b22);
+
+	matrix<T> c11 = p1 + p4 + p7 - p5;
+	matrix<T> c12 = p3 + p5;
+	matrix<T> c21 = p2 + p4;
+	matrix<T> c22 = p1 + p3 + p6 - p2;
+
+	return merge(c11, c12, c21, c22);
+}
+
+template<typename T>
+matrix<T> Strassen(const matrix<T> &a, const matrix<T> &b) {
+	int na = a.get_n(), ma = a.get_m();
+	int nb = b.get_n(), mb = b.get_m();
+	if (ma != nb) throw 1;
+	int bin_size = 1;
+	while (bin_size < min(a.get_n(), a.get_m()) || bin_size < min(b.get_n(), b.get_m()))
+		bin_size <<= 1;
+
+	matrix<T> normal_a(bin_size, bin_size), normal_b(bin_size, bin_size);
+	normal_a.insert(0, a.get_n() - 1, 0, a.get_m() - 1, a);
+	normal_b.insert(0, b.get_n() - 1, 0, b.get_m() - 1, b);
+	return Strassen_(normal_a, normal_b).crop(0, na - 1, 0, mb - 1);
 }
 
 template<typename T>
@@ -429,76 +458,92 @@ private:
 	int n = 0, m = 0;
 };
 
-template<typename T>
-matrix<T> merge(const matrix<T> &_11, const matrix<T> &_12, const matrix<T> &_21, const matrix<T> &_22) {
-	if(_11.get_n() != _12.get_n() || _21.get_n() != _22.get_n() || _11.get_m() != _21.get_m() || _12.get_m() != _22.get_m())
-		throw 1;
-	int nb = _11.get_n() + _21.get_n(), mb = _11.get_m() + _12.get_m();
-	matrix<T> res(nb, mb);
-	res.insert(0, _11.get_n() - 1, 0, _11.get_m() - 1, _11);
-	res.insert(0, _12.get_n() - 1, _11.get_m(), mb - 1, _12);
-	res.insert(_11.get_n(), nb - 1, 0, _21.get_m() - 1, _21);
-	res.insert(_12.get_n(), nb - 1, _21.get_m(), mb - 1, _22);
-	return res;
-}
-
-template<typename T>
-matrix<T> mult_(const matrix<T> &a, const matrix<T> &b, int mod) {
-	if (a.get_n() == 1) {
-		matrix<T> res(1, 1);
-		res[0][0] = (a[0][0] * b[0][0]) % mod;
-		return res;
+template<int P>
+class mod {
+public:
+	mod() = default;
+	mod(int val_) : val(val_ % P) {}
+	void operator+= (mod another) {
+		val = (val + another.val) % P;
 	}
-	else {
-		matrix<T> a11, a12, a21, a22;
-		a.split(a11, a12, a21, a22);
-
-		matrix<T> b11, b12, b21, b22;
-		b.split(b11, b12, b21, b22);
-
-		matrix<T> p1 = mult_(add_mod(a11, a22, mod), add_mod(b11, b22, mod), mod);
-		matrix<T> p2 = mult_(add_mod(a21, a22, mod), b11, mod);
-		matrix<T> p3 = mult_(a11, sub_mod(b12, b22, mod), mod);
-		matrix<T> p4 = mult_(a22, sub_mod(b21, b11, mod), mod);
-		matrix<T> p5 = mult_(add_mod(a11, a12, mod), b22, mod);
-		matrix<T> p6 = mult_(sub_mod(a21, a11, mod), add_mod(b11, b12, mod), mod);
-		matrix<T> p7 = mult_(sub_mod(a12, a22, mod), add_mod(b21, b22, mod), mod);
-
-		matrix<T> c11 = add_mod(add_mod(p1, p4, mod), sub_mod(p7, p5, mod), mod);
-		matrix<T> c12 = add_mod(p3, p5, mod);
-		matrix<T> c21 = add_mod(p2, p4, mod);
-		matrix<T> c22 = add_mod(sub_mod(p1, p2, mod), add_mod(p3, p6, mod), mod);
-
-		return merge(c11, c12, c21, c22);
+	void operator-= (mod another) {
+		val = (val - another.val + P) % P;
 	}
+	void operator*= (mod another) {
+		val = (val * another.val) % P;
+	}
+	void operator/= (mod another) {
+		val = (val * inv(another.val)) % P;
+	}
+	template<int T>
+	friend mod<T> operator+ (mod<T> a, mod<T> b);
+	template<int T>
+	friend mod<T> operator- (mod<T> a, mod<T> b);
+	template<int T>
+	friend mod<T> operator* (mod<T> a, mod<T> b);
+	template<int T>
+	friend mod<T> operator/ (mod<T> a, mod<T> b);
+	template<int T>
+	friend std::ostream& operator <<(std::ostream& out, const mod<T> &m);
+	template<int T>
+	friend std::istream& operator >>(std::istream& in, mod<T> &m);
+private:
+	pair<int, int> extgcd(int a, int b) {
+		if (b == 0) return { 1, 0 };
+		pair<int, int> res = extgcd(b, a % b);
+		return { res.second, res.first - (a / b) * res.second };
+	}
+	int inv(int a) { return (extgcd(a, P).first % P + P) % P; }
+
+	int val = 0;
+};
+
+template<int P>
+mod<P> operator+ (mod<P> a, mod<P> b) {
+	return (a.val + b.val) % P;
+}
+
+template<int P>
+mod<P> operator- (mod<P> a, mod<P> b) {
+	return (a.val - b.val + P) % P;
+}
+
+template<int P>
+mod<P> operator* (mod<P> a, mod<P> b) {
+	return (a.val * b.val) % P;
+}
+
+template<int P>
+mod<P> operator/ (mod<P> a, mod<P> b) {
+	return (a.val * inv(b.val)) % P;
+}
+
+template<int P>
+std::ostream& operator <<(std::ostream& out, const mod<P> &m) {
+	out << m.val;
+	return out;
+}
+
+template<int P>
+std::istream& operator >>(std::istream& in, mod<P> &m) {
+	in >> m.val;
+	m.val %= P;
+	return in;
 }
 
 template<typename T>
-matrix<T> mult(const matrix<T> &a, const matrix<T> &b, int mod) {
-	int na = a.get_n(), ma = a.get_m();
-	int nb = b.get_n(), mb = b.get_m();
-	if (ma != nb)
-		throw 1;
-	int n = (1 << (int)ceil(max(log2(max(a.get_n(), a.get_m())), log2(max(b.get_n(), b.get_m())))));
-	matrix<T> normal_a(n, n), normal_b(n, n);
-	normal_a.insert(0, a.get_n() - 1, 0, a.get_m() - 1, a);
-	normal_b.insert(0, b.get_n() - 1, 0, b.get_m() - 1, b);
-	return mult_(normal_a, normal_b, mod).crop(0, na - 1, 0, mb - 1);
-}
-
-template<typename T>
-matrix<T> binpow_mod(matrix<T> a, int p, int mod) {
+matrix<T> binpow_strassen(matrix<T> a, int p) {
 	int n = a.get_n(), m = a.get_m();
 	if (n != m)
 		throw 1;
 	matrix<T> res = get_identity<T>(n);
 	while (p) {
 		if (p & 1) {
-			res = mult(res, a, mod);
+			res = Strassen(res, a);
 			--p;
 		}
 		else {
-			a = mult(a, a, mod);
+			a = Strassen(a, a);
 			p >>= 1;
 		}
 	}
@@ -510,7 +555,6 @@ signed main()
 	ios_base::sync_with_stdio(0);
 	cin.tie(0), cout.tie(0);
 	//freopen("input.txt", "r", stdin);
-
 
 	return 0;
 }
