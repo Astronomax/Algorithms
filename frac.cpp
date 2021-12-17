@@ -1,56 +1,56 @@
-class drob {
+class frac {
 public:
 	int chisl, znam;
 
-	drob(int a) {
+	frac(int a) {
 		chisl = a;
 		znam = 1;
 	}
-	drob(int _chisl, int _znam) {
+	frac(int _chisl, int _znam) {
 		chisl = _chisl;
 		znam = _znam;
 	}
 };
 
-drob operator- (drob a, drob b) {
+frac operator- (frac a, frac b) {
 	return { a.chisl * b.znam - b.chisl * a.znam, a.znam * b.znam };
 }
 
-drob operator+ (drob a, drob b) {
+frac operator+ (frac a, frac b) {
 	return { a.chisl * b.znam + b.chisl * a.znam, a.znam * b.znam };
 }
 
-drob operator* (drob a, drob b) {
+frac operator* (frac a, frac b) {
 	return { a.chisl * b.chisl, a.znam * b.znam };
 }
 
-drob operator/ (drob a, drob b) {
+frac operator/ (frac a, frac b) {
 	swap(b.chisl, b.znam);
 	return a * b;
 }
 
-void operator-= (drob &a, drob b) {
+void operator-= (frac &a, frac b) {
 	a = a - b;
 }
 
-void operator+= (drob &a, drob b) {
+void operator+= (frac &a, frac b) {
 	a = a + b;
 }
 
-bool operator== (drob a, drob b) {
+bool operator== (frac a, frac b) {
 	return ((a.chisl == b.chisl) && (a.znam == b.znam));
 }
 
-bool operator!= (drob a, drob b) {
+bool operator!= (frac a, frac b) {
 	return !(a == b);
 }
 
-bool operator< (drob a, drob b) {
+bool operator< (frac a, frac b) {
 	auto res = a - b;
 	return (res.chisl * res.znam < 0);
 }
 
-bool operator> (drob a, drob b) {
+bool operator> (frac a, frac b) {
 	auto res = a - b;
 	return (res.chisl * res.znam > 0);
 }
