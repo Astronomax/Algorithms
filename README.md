@@ -1,2 +1,2 @@
 # Algorithms
-Алгоритмы для олимпиадного программирования
+C++ implementations of different cp-algorithms
